@@ -1,23 +1,23 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { Input, Button, Form } from "antd";
+import { Input, Button, Form, DatePicker } from "antd";
 import { useReactToPrint } from "react-to-print";
 import "./invoice.css"; // import the CSS below
 import logo from "./assets/logo.png"; // Placeholder for logo image
 
-import { ADToBS } from 'bikram-sambat-js';
-const today = new Date();
-const bsDate = ADToBS(today);
+import { ADToBS } from "bikram-sambat-js";
 
 const InvoicePage = () => {
   const [formData, setFormData] = useState({
     invoiceNumber: "",
     studentName: "",
+    reference: "Monthly Fee",
   });
   const [items, setItems] = useState([{ description: "", amount: "" }]);
   const [showInvoice, setShowInvoice] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState(null);
+  const [bsDate, setBsDate] = useState(ADToBS(new Date()));
   const invoiceRef = useRef(null);
 
   const reactToPrintFn = useReactToPrint({
@@ -59,8 +59,13 @@ const InvoicePage = () => {
   };
 
   const handleSubmit = (values) => {
-    setFormData(values);
+    setFormData({
+      ...values,
+      reference: values.reference?.trim() || "Monthly Fee",
+    });
     setInvoiceNumber(values.invoiceNumber);
+    const selectedDate = values.invoiceDate?.toDate?.() ?? new Date();
+    setBsDate(ADToBS(selectedDate));
     setShowInvoice(true);
   };
 
@@ -83,6 +88,21 @@ const InvoicePage = () => {
               rules={[{ required: true, message: "Please enter invoice number" }]}
             >
               <Input placeholder="Enter invoice number" />
+            </Form.Item>
+            <Form.Item
+              label="Date (Optional)"
+              name="invoiceDate"
+            >
+              <DatePicker
+                style={{ width: "100%" }}
+                placeholder="Select invoice date"
+              />
+            </Form.Item>
+            <Form.Item
+              label="Reference (Optional)"
+              name="reference"
+            >
+              <Input placeholder="Monthly Fee" />
             </Form.Item>
 
             <div style={{ marginBottom: "20px" }}>
@@ -138,7 +158,7 @@ const InvoicePage = () => {
                 <p>PAN: 623291067</p>
                 <p>INVOICE NO.: INV{invoiceNumber}</p>
                 <p>Date: {bsDate}</p>
-                <p>Reference: Monthly Fee</p>
+                <p>Reference: {formData.reference}</p>
               </div>
             </div>
 
