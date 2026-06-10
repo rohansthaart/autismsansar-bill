@@ -8,6 +8,15 @@ import logo from "./assets/logo.png"; // Placeholder for logo image
 
 import { ADToBS } from "bikram-sambat-js";
 
+const isAppleMobileBrowser = () => {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+};
+
 const InvoicePage = () => {
   const [formData, setFormData] = useState({
     invoiceNumber: "",
@@ -19,22 +28,24 @@ const InvoicePage = () => {
   const [invoiceNumber, setInvoiceNumber] = useState(null);
   const [bsDate, setBsDate] = useState(ADToBS(new Date()));
   const invoiceRef = useRef(null);
+  const shouldPreservePrintFrame = isAppleMobileBrowser();
 
   const reactToPrintFn = useReactToPrint({
     contentRef: invoiceRef,
+    documentTitle: `Invoice-${invoiceNumber || "preview"}`,
+    preserveAfterPrint: shouldPreservePrintFrame,
+    onPrintError: (errorLocation, error) => {
+      console.error(`Printing failed during ${errorLocation}:`, error);
+    },
   });
 
   const handlePrint = () => {
-    // Detect iOS devices
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    
-    if (isIOS) {
-      // For iOS, use native window.print() which requires user interaction
-      window.print();
-    } else {
-      // For other devices, use react-to-print
-      reactToPrintFn();
+    if (!invoiceRef.current) {
+      console.error("There is no invoice content available to print.");
+      return;
     }
+
+    reactToPrintFn();
   };
 
   const handleAddItem = () => {
